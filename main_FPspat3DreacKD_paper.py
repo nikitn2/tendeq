@@ -203,7 +203,7 @@ def paperFig1(samples_plot, omega_mps, chi_mps,logTransform = True):
         
         
         if logTransform:
-            top = np.ceil(np.round(pp_mps.max()/100,1)*100)
+            top = 100
             bottom = 1e-2
             
             pp_mps[pp_mps<bottom] = np.nan
