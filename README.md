@@ -36,4 +36,4 @@ Alternatively, if the MPS data is available in the data/results_FPspat3DreacKD_t
 
 ––––––
 
-As mentioned in the license, using this code for any academic or commercial purpose requires attribution to the paper for which it was created: "Tensor networks enable the calculation of turbulence probability distributions"; Sci Advs (2025); N. Gourianov, P. Givi, D. Jaksch, S. B. Pope."
+As mentioned in the license, using this code for any academic or commercial purpose requires attribution to the paper for which it was created: "Tensor networks enable the calculation of turbulence probability distributions" (2025); N. Gourianov, P. Givi, D. Jaksch, S. B. Pope."
