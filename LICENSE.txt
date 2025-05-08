@@ -4,4 +4,4 @@ Licensed under the GPL license v3 (the "License"); you may not use this file exc
 
     https://www.gnu.org/licenses/gpl-3.0
 
-Over and above the legal restrictions imposed by this license, if you use this software (for example, for an academic publication) then you are obliged to provide proper attribution. This should be to the paper that is based on this software: "Tensor networks enable the calculation of turbulence probability distributions"; Sci Advs (2025); N. Gourianov, P. Givi, D. Jaksch, S. B. Pope.
+Over and above the legal restrictions imposed by this license, if you use this software (for example, for an academic publication) then you are obliged to provide proper attribution. This should be to the paper that is based on this software: "Tensor networks enable the calculation of turbulence probability distributions" (2025); N. Gourianov, P. Givi, D. Jaksch, S. B. Pope.
