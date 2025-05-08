@@ -13,12 +13,17 @@ Here lie various MPS and MPO functions that deal with discretised functions in s
 The first part of the file deals with the MPS functions, the other part with the MPO ones.
 """
 
-def primefact(number, f=2):
-    # Support function
-
-    if number < f: return []
-    if number % f == 0: return [f] + primefact(number / f, 2)
-    return primefact(number, f + 1)
+def primefact(number):
+    factors = []
+    if number<2: return [1]
+    f = 2
+    while f**2 <= number:
+        while number % f == 0:
+            factors.append(f)
+            number //= f
+        f+=1
+    if number >1: factors.append(number)
+    return factors
 
 # Dmrg based on autodifferencing. Requires that loss_fn = loss_fn(mps, ...).
 def mpsDmrg_autodiff(mps_init, chi_max, loss_fn, loss_kwargs, eps = 1e-15,
@@ -389,7 +394,7 @@ def mpsProlongateKD(orig_mps, K, NK, boundryCond = "periodic", split=True, chi =
 
 
     # Create the prolongator
-    prolo_mpo = mpo.mpoCreateAcc2ProlongatorKD(K, NK, Nt, boundryCond = boundryCond, split = split)
+    prolo_mpo = mpoCreateAcc2ProlongatorKD(K, NK, Nt, boundryCond = boundryCond, split = split)
 
     # Use the prolongator to prolong the mps by connecting & contracting each prolongator in turn
 
@@ -604,10 +609,10 @@ def mpsoRevInterleave(mpso, K, NK, Nt = None, max_bond=None, cutoff=1e-16):
     return mpsoRI
 
 # Shifts indices and tags of mpsOrig
-def shiftIndextagMps(mpsOrig, Nextra, start = 0, shifted_ind_id = None, tag_shift = True):
+def shiftIndextagMps(mpsOrig, Nextra, start = 0, shifted_ind_id = None, tag_shift = True, N = None):
 
     # Initialise
-    N = mpsOrig.L
+    if N==None: N = mpsOrig.L
     siteTagId = mpsOrig.site_tag_id
     if isinstance(mpsOrig, qu.tensor.tensor_1d.MatrixProductState):
         if shifted_ind_id==None: siteIndId = (mpsOrig.site_ind_id,)
@@ -650,23 +655,19 @@ def mpsKron(mps1, mps2):
 
     # Reindex & retag mps2
     mps2 = shiftIndextagMps(mps2,N)
-
+    
     # Now tensor mps1 & mps2
     mpsOut &= mps2
     qu.tensor.tensor_core.new_bond( mpsOut[siteTagId.format(N -1)], mpsOut[siteTagId.format(N)] ); mpsOut._L += mps2.L
 
     return mpsOut
 
-# Creates a K-dimensional delta function for dim k \in{1,2,...,K}
-def createDelta(NK, K, k, split):
 
-    if split is True:
-        delta_k = qu.tensor.tensor_builder.MPS_product_state(arrays = [np.array([1.0,1.0])]*NK*(k-1) + [np.array([1.0,1e-16])]*NK + [np.array([1.0,1.0])]*NK*(K-k),site_tag_id="s{}", site_ind_id="k{}")
-    else:
-        arrays = [ [np.array([1.0,1e-16])] if (n-k+1)%K==0 else [np.array([1,1])] for n in range(0,NK*K) ]
-        delta_k = qu.tensor.tensor_builder.MPS_product_state(arrays = arrays, site_tag_id="s{}", site_ind_id="k{}")
 
-    return delta_k
+
+
+
+
 
 # Creates a linear function in K-dimensional space
 # Note: scales O(2**NK) ! But that's OK because in theory linear functions can
@@ -823,6 +824,57 @@ def mpsSetTags1D(uu_ket, split):
             #uu_ket[2*n+1].reindex({'k{}'.format(2*n+1) : 'k{}'.format(N2+n)}, inplace=True)
     return uu_ket
 
+# Creates a K-dimensional delta function for dim k \in{1,2,...,K}
+def createDelta(NK, K, k, split):
+
+    if split is True:
+        delta_k = qu.tensor.tensor_builder.MPS_product_state(arrays = [np.array([1.0,1.0])]*NK*(k-1) + [np.array([1.0,1e-16])]*NK + [np.array([1.0,1.0])]*NK*(K-k),site_tag_id="s{}", site_ind_id="k{}")
+    else:
+        arrays = [ [np.array([1.0,1e-16])] if (n-k+1)%K==0 else [np.array([1,1])] for n in range(0,NK*K) ]
+        delta_k = qu.tensor.tensor_builder.MPS_product_state(arrays = arrays, site_tag_id="s{}", site_ind_id="k{}")
+
+    return delta_k
+
+def createDeltaIndex(n,m, split = True):
+
+    # Initialise
+    dims = primefact(m)
+    locs = []
+    arrays = []
+
+    # Compute location of 1 in radix system
+    for dim in dims:
+        locs.append(n % dim)
+        n //= dim
+
+    # Build up MPS arrays
+    for i in range(len(dims)):
+        dim = dims[i]; loc = locs[i]
+        array = np.zeros(dim); array[loc] = 1
+        arrays.append(array)
+
+    if split == True: return qu.tensor.tensor_builder.MPS_product_state(arrays[::-1],site_tag_id="s{}", site_ind_id="k{}")
+    else: return None # Todo.
+    
+def mpsConcatenate(mpses_in, max_bond = None, cutoff=1e-14):
+    
+    # Initialise
+    m = len(mpses_in)
+    mpses_out = None
+    chi_intermed = None if max_bond == None else max_bond*4
+    
+    for i,mps_in in enumerate(mpses_in):
+        index_mps = createDeltaIndex(i,m)
+        mps_out = mpsKron(mps_in,index_mps)
+        if mpses_out == None: mpses_out = mps_out
+        else: mpses_out.add_MPS(mps_out, inplace=True, compress=True, max_bond = max_bond, cutoff = 1/100*cutoff)
+        if i % 10 == 0:
+            print("MPS-concat {:.1f}% complete.".format(i / len(mpses_in) * 100.0))
+            mpses_out.show()
+    
+    mpses_out.compress(max_bond = max_bond, cutoff = cutoff)
+    return mpses_out
+
 # Useful MPS decomp/inverseDecomp function wrappers
 def mpsDecompFlow1D(uu, tol_bond = 1e-16, split = True): return mpsDecompFlowKD(uu, K=1, Nt=int(np.log2(uu.shape[-1])), split=split, tol_bond = tol_bond)
 def mpsInvDecompFlow1D(uu_mps, Nt=None, split=True): return mpsInvDecompFlowKD(uu_mps, K=1, Nt=Nt, split=split)
@@ -860,13 +912,6 @@ def mpsSetTagsIndsKD(u_mps, K, Nt, split):
     for n in range(NK*(Ktot), N): u_mps[n].add_tag("t_{}".format(n-NK*K))
 
     return u_mps
-
-def f (number, f=2):
-    # Support function
-
-    if number < f: return []
-    if number % f == 0: return [f] + primefact(number/f, 2)
-    return primefact (number, f + 1)
 
 def mpsDecompFlowKD_uneven(u, split, tol_bond = 1e-16):
 
@@ -922,10 +967,10 @@ def mpsInvDecompFlowKD(u_mps, Ms, split):
     # (columns) to x_2 and so on until the x_Kth dimension, which corresponds to the slowest varying index.
 
     # Initialise
-    primes = [primefact(dim)[::-1] for dim in Ms if dim>1]
+    primes = [primefact(dim)[::-1] for dim in Ms]# if dim>1]
     NKs = [len(prime) for prime in primes]; KNs = []; Ks_valid = []
     sii = u_mps.site_ind_id
-
+    
     # Get breakdown of Ks and Ns
     while sum(len(prime) for prime in primes) > 0:
         ks_valid = [];  k = 0
