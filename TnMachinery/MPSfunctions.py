@@ -930,9 +930,12 @@ def createDeltaIndex(n, m, split=True):
         arrays.append(array)
 
     if split == True:
-        return qu.tensor.tensor_builder.MPS_product_state(arrays[::-1], site_tag_id="s{}", site_ind_id="k{}")
+        delta_mps = qu.tensor.tensor_builder.MPS_product_state(arrays[::-1], site_tag_id="s{}", site_ind_id="k{}")
+        if len(arrays) == 1 and len(arrays[0].shape) == 1: delta_mps.squeeze(inplace=True)
     else:
-        return None  # Todo.
+        delta_mps = None  # Todo.
+    
+    return delta_mps
 
 
 def mpsConcatenate(mpses_in, max_bond=None, cutoff=1e-14):
@@ -947,7 +950,7 @@ def mpsConcatenate(mpses_in, max_bond=None, cutoff=1e-14):
         if mpses_out == None:
             mpses_out = mps_out
         else:
-            mpses_out.add_MPS(mps_out, inplace=True, compress=True, max_bond=max_bond, cutoff=1 / 100 * cutoff)
+            mpses_out.add_MPS(mps_out, inplace=True, compress=True, max_bond=chi_intermed, cutoff=1 / 100 * cutoff)
         if i % 10 == 0:
             print("MPS-concat {:.1f}% complete.".format(i / len(mpses_in) * 100.0))
             mpses_out.show()
