@@ -314,11 +314,7 @@ if __name__ == '__main__':
         exactRunMeans = True
         mpsRun = True
         statsPlots = True
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> origin/main
     NSAMPLES = 16
     OMEGA_MAX= 1814
     

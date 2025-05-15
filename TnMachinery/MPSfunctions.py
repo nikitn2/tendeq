@@ -909,7 +909,7 @@ def createDelta(NK, K, k, split):
 
     return delta_k
 
-
+# Creates a delta-function at index n of the m-sized dimension
 def createDeltaIndex(n, m, split=True):
     # Initialise
     dims = primefact(m)
@@ -929,6 +929,7 @@ def createDeltaIndex(n, m, split=True):
         array[loc] = 1
         arrays.append(array)
 
+    # Now create the delta-function
     if split == True:
         delta_mps = qu.tensor.tensor_builder.MPS_product_state(arrays[::-1], site_tag_id="s{}", site_ind_id="k{}")
         if len(arrays) == 1 and len(arrays[0].shape) == 1: delta_mps.squeeze(inplace=True)
@@ -937,7 +938,7 @@ def createDeltaIndex(n, m, split=True):
     
     return delta_mps
 
-
+# Concatenates a list of mpses into a single new mps.
 def mpsConcatenate(mpses_in, max_bond=None, cutoff=1e-14):
     # Initialise
     m = len(mpses_in)
@@ -958,24 +959,12 @@ def mpsConcatenate(mpses_in, max_bond=None, cutoff=1e-14):
     mpses_out.compress(max_bond=max_bond, cutoff=cutoff)
     return mpses_out
 
-
 # Useful MPS decomp/inverseDecomp function wrappers
-def mpsDecompFlow1D(uu, tol_bond=1e-16, split=True): return mpsDecompFlowKD(uu, K=1, Nt=int(np.log2(uu.shape[-1])),
-                                                                            split=split, tol_bond=tol_bond)
-
-
+def mpsDecompFlow1D(uu, tol_bond=1e-16, split=True): return mpsDecompFlowKD(uu, K=1, Nt=int(np.log2(uu.shape[-1])), split=split, tol_bond=tol_bond)
 def mpsInvDecompFlow1D(uu_mps, Nt=None, split=True): return mpsInvDecompFlowKD(uu_mps, K=1, Nt=Nt, split=split)
-
-
 def mpsDecompFlow1D_timestep(u, tol_bond=1e-16): return mpsDecompFlowKD_timestep(u, K=1, split=True, tol_bond=tol_bond)
-
-
 def mpsInvDecompFlow1D_timestep(u_mps): return mpsInvDecompFlowKD_timestep(u_mps, K=1, split=True)
-
-
-def mpsDecompFlowKD_timestep(u, K, split, tol_bond=1e-16): return mpsDecompFlowKD(u, K, Nt=0, split=split,
-                                                                                  tol_bond=tol_bond)
-
+def mpsDecompFlowKD_timestep(u, K, split, tol_bond=1e-16): return mpsDecompFlowKD(u, K, Nt=0, split=split, tol_bond=tol_bond)
 
 def mpsInvDecompFlowKD_timestep(u_mps, K, split):
     # Assume u_mps is of shape (2**NK,2**NK,...2**NK)
