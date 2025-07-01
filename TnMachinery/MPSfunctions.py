@@ -293,8 +293,8 @@ def mpsCompressionRatio(uu_mps=None, N=None, chi=None, phys_dim=2, adjustForGaug
 
     for n in range(0, N):
         # extract bond dimensions around the nth tensor
-        leftBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n - 1], uu_mps[n])
-        rightBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n], uu_mps[n + 1])
+        leftBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n - 1], uu_mps[n])  if n>1 or uu_mps.cyclic == True else 1
+        rightBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n], uu_mps[n + 1]) if n<N or uu_mps.cyclic == True else 1
         physBondDim = uu_mps.phys_dim(n)
 
         fullNumParas = fullNumParas * physBondDim
@@ -949,7 +949,7 @@ def mpsConcatenate(mpses_in, max_bond=None, cutoff=1e-14):
         mps_out = mpsKron(mps_in, index_mps)
         if mpses_out == None: mpses_out = mps_out
         else:                 mpses_out.add_MPS(mps_out, inplace=True, compress=False)
-        if i % 100 == 0:
+        if i % 20 == 0:
             print("MPS-concat {:.1f}% complete.".format(i / len(mpses_in) * 100.0))
             mpses_out.compress(max_bond=max_bond, cutoff=cutoff)
             mpses_out.show()
