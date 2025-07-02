@@ -293,8 +293,8 @@ def mpsCompressionRatio(uu_mps=None, N=None, chi=None, phys_dim=2, adjustForGaug
 
     for n in range(0, N):
         # extract bond dimensions around the nth tensor
-        leftBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n - 1], uu_mps[n])  if n>1 or uu_mps.cyclic == True else 1
-        rightBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n], uu_mps[n + 1]) if n<N or uu_mps.cyclic == True else 1
+        leftBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n - 1], uu_mps[n])  if n>1 and N>1 or uu_mps.cyclic == True else 1
+        rightBondDim = qu.tensor.tensor_core.bonds_size(uu_mps[n], uu_mps[n + 1]) if n<N and N>1 or uu_mps.cyclic == True else 1
         physBondDim = uu_mps.phys_dim(n)
 
         fullNumParas = fullNumParas * physBondDim
