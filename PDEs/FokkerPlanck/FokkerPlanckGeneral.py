@@ -234,7 +234,7 @@ def computeStats(p_mps, Nt, split, v, c, K_x, K_v, K_phi, actualMeans = None, ac
             for i in range(0,K_vphi): actualMeans[i,:] = means[i,:]
         fluc_mpses = []
         for i in range(0,K_vphi):
-            if len(actualMeans[i,:])>1: temp0 = mps.mpsDecompFlow1D_timestep(actualMeans[i,:])
+            if len(actualMeans[i,:])>1: temp0 = mps.mpsDecompFlow1D_timestep(actualMeans[i,:].squeeze())
             else:                       temp0 = actualMeans[i,:][0]
             temp1 = mps.mpsKron(flatPhi_mps,temp0)
             temp2 = mps.mpsKron(vphi_mpses[i],flatTime_mps)
@@ -298,7 +298,7 @@ def computeStats(p_mps, Nt, split, v, c, K_x, K_v, K_phi, actualMeans = None, ac
         fluc_mpses = []
         for i in range(0,K_vphi):
             
-            temp1 = mps.mpsKron(mps.mpsDecompFlowKD(actualMeans[...,i,:], K_x, Nt, split=True), flatPhiRaw_mps)
+            temp1 = mps.mpsKron(mps.mpsDecompFlowKD(actualMeans[...,i,:].squeeze(), K_x, Nt, split=True), flatPhiRaw_mps)
             temp2 = mps.mpsKron(flatSpatial_mps,mps.mpsKron(vphiRaw_mpses[i],flatTime_mps))
             fluc_mpses += [temp2.add_MPS(-1*temp1)]
         

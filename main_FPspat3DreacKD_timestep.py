@@ -201,7 +201,7 @@ def simRunExactFP(*args_simParams, samples):
     else:                   samples = np.arange(0,MtSamples+1)
     
     # Convert to MPS for compatibility with the stats-MPS function
-    p_t_Exactmpses = [ mps.mpsDecompFlowKD_timestep(ps_exact[...,t],K_x+K_phi,split=True) for t in range(MtSamples)]
+    p_t_Exactmpses = [ mps.mpsDecompFlowKD_timestep(ps_exact[...,t].squeeze(),K_x+K_phi,split=True) for t in range(MtSamples)]
     
     # Save
     varsToSave.update({"p_t_mpses":p_t_Exactmpses, "samples" :samples})
@@ -304,14 +304,14 @@ if __name__ == '__main__':
         reacs_in = [0,0.5,1,1.5] #0 to 1.5
         reacType = "LinLin" # "LinLin" vs "Lin".
         omegas_in = [449, 904, 1359, 1814] # Equivalent to C_omega = .25, .50, .75, 1.0 in the paper (up to two digits of precision): omega_in = C_omega/Δ_l^2.
-        NKs_in = [7]
+        NKs_in = [3]
         chis_in = [2,4,8,16, 32, 64, 96, 128]
         #        
         T_in=2.0
         samples = None
         #
-        exactRunFPs = True
-        exactRunMeans = True
+        exactRunFPs = False
+        exactRunMeans = False
         mpsRun = True
         statsPlots = True
 
